@@ -80,7 +80,7 @@ class SdarotTV:
             return res[0].id
         return None
 
-    def downloadVideoById(self, seriesId: str, season: str, episode: str):
+    def downloadVideoById(self, seriesId: str, season: int, episode: int):
         tokenRes = self.request("/ajax/watch", {
             "body": f"preWatch=true&SID={seriesId}&season={season}&ep={episode}",
             "method": "POST"
@@ -117,7 +117,7 @@ class SdarotTV:
         else:
             print(res.error if res.error else "Unknown error")
 
-    def downloadVideo(self, name, season, episode):
+    def downloadVideo(self, name: str, season: int, episode: int):
         seriesId = self.searchSeries(name)
         if seriesId:
             self.downloadVideoById(seriesId, season, episode)
