@@ -126,7 +126,7 @@ class SdarotTV:
 
 
 def main():
-    user = User(username="asdfasdf", password="u!8t66z9jP6RBUW")
+    user = User(username="YOUR_USERNAME", password="YOUR_PASSWORD")  # credintials for sdarot.tv
     sdarot = SdarotTV(user, "https://sdarot.buzz")
     sdarot.downloadVideo("the simpsons", 1, 1)
 
