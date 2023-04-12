@@ -102,14 +102,13 @@ class SdarotTV:
             return res[0].id
         return None
 
-    def downloadVideoById(self, seriesId: str, season: int, episode: int):
+    def downloadVideoById(self, seriesId: str, season: int, episode: int, file_name: str = None):
         def get_token():
             tokenRes = self.request("/ajax/watch", {
                 "body": f"preWatch=true&SID={seriesId}&season={season}&ep={episode}",
                 "method": "POST"
             })
             return tokenRes.text
-
 
         def get_video_res():
             finalRes = self.request("/ajax/watch", {
@@ -127,12 +126,12 @@ class SdarotTV:
             res = get_video_res()
 
         if res.error:
-            raise Exception(res.error if res.error else "Unknown error")
+            raise Exception(res.error or "Unknown error")
         if not res.watch:
             raise Exception("No videos found for this episode")
 
         highest_res = max(res.watch.keys(), key=int)
-        video_path = f"video-{res.VID}.mp4"
+        video_path = file_name or f"video-{res.VID}.mp4"
         video_url = f"https:{res.watch[highest_res]}"
 
         with requests.get(video_url, headers={"accept": "*/*", "cookie": self.cookie}, stream=True) as response:
@@ -151,10 +150,10 @@ class SdarotTV:
                 logger.success(f"\rDownloaded {video_path}")
 
 
-    def downloadVideo(self, name: str, season: int, episode: int):
+    def downloadVideo(self, name: str, season: int, episode: int, file_name: str = None):
         seriesId = self.searchSeries(name)
         if seriesId:
-            self.downloadVideoById(seriesId, season, episode)
+            self.downloadVideoById(seriesId, season, episode, file_name)
         else:
             raise Exception("Series not found")
 
@@ -162,7 +161,7 @@ class SdarotTV:
 def main():
     user = User("YOUR_USERNAME", "YOUR_PASSWORD")  # credintials for sdarot.tv
     sdarot = SdarotTV(user=user, host="https://sdarot.buzz")
-    sdarot.downloadVideo("the simpsons", 1, 1)
+    sdarot.downloadVideo("the simpsons", 1, 1, "simpsons_1.mp4")
 
 
 if __name__ == '__main__':
