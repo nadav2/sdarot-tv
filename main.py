@@ -7,7 +7,7 @@ from loguru import logger
 
 
 def count_doown(seconds: int):
-    for i in range(seconds, 0, -1):
+    for i in reversed(range(seconds)):
         print(f"\r{i} seconds left to start downloading ", end="")
         time.sleep(1)
     print()
@@ -62,7 +62,6 @@ class SdarotTV:
         else:
             logger.warning("\rNo user was provided. as for 12/04/2023 sdarot.tv requires login to download videos. We will try to download the videos anyway but it might fail.")
 
-
     def login(self, user: User):
         res = self.request("/login", {
             "body": f"location=%2F&username={user.username}&password={user.password}&submit_login=",
@@ -75,7 +74,6 @@ class SdarotTV:
             raise Exception("Missing username or password")
         if "ניצלת את כל נסיונות ההתחברות העומדים לרשותך. נא נסה שנית מאוחר יותר." in res.text:
             raise Exception("Too many unsuccessful login attempts. Please try again later.")
-
 
     def request(self, url: str, options=None):
         headers = {
@@ -148,7 +146,6 @@ class SdarotTV:
                     print(f"\rDownloaded {bytes_so_far} / {total_size} bytes ({progress}%)", end="")
                 print()
                 logger.success(f"\rDownloaded {video_path}")
-
 
     def downloadVideo(self, name: str, season: int, episode: int, file_name: str = None):
         seriesId = self.searchSeries(name)
