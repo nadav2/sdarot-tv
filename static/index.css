@@ -1,0 +1,168 @@
+
+body {
+    font-family: Arial, 'Roboto', sans-serif;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #fdf1d1;
+    width: min(98vw, 1000px);
+    margin-inline: auto;
+    border-radius: 30px;
+    padding-block: 30px;
+    gap: 56px;
+}
+
+
+.info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: -32px;
+}
+
+.info h1 {
+    text-align: center;
+}
+
+.info p {
+    padding-inline: 8px;
+}
+
+.modal {
+    display: flex;
+    flex-direction: column;
+    width: min(600px, calc(98% - 32px));
+    background-color: dodgerblue;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid black;
+    color: white;
+}
+
+.model-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.model-inputs-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 16px;
+    gap: 12px;
+}
+
+.model-inputs-container :is(input[type="text"], input[type="password"], input[type="number"], select) {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid lightgray;
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+input:disabled {
+    background: #e0e0e0;
+    color: #a0a0a0;
+}
+
+.model-inputs-container > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.model-inputs-container > div > span {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+button {
+    cursor: pointer;
+}
+
+.model-btn {
+    margin-top: 24px;
+    font-size: 18px;
+    font-weight: bold;
+    padding-block: 8px;
+    border-radius: 30px;
+    border: 1px solid black;
+    color: dodgerblue;
+    background: white;
+    transition: 0.15s ease-in-out background, 0.15s ease-in-out color, 0.25s ease-in-out box-shadow;
+}
+
+.model-btn:hover {
+    background: black;
+    color: white;
+}
+
+.model-btn:active {
+    box-shadow: 0 0 0 6px white inset;
+}
+
+.error {
+    background: lightgray;
+    color: white;
+    margin-top: 16px;
+    padding: 14px;
+    text-align: center;
+    border-radius: 10px;
+    color: black;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.loading {
+    text-align: center;
+    background: #404040;
+    border-radius: 14px;
+    padding: 12px;
+    margin-top: 16px;
+    display: none;
+}
+
+.spinner {
+    margin-top: 16px;
+    width: min(40%, 160px);
+    margin-inline: auto;
+    aspect-ratio: 1/1;
+    display: grid;
+    place-items: center;
+    position: relative;
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    border: 10px solid lightgray;
+    border-radius: 50%;
+    border-top-color: dodgerblue;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+button:disabled {
+    background: lightgray !important;
+    opacity: 0.8;
+    cursor: not-allowed;
+    color: black !important;
+}
+
+.spinner > span {
+    font-size: 36px;
+    font-weight: bold;
+}
+
+@media (max-width: 960px) {
+    h1 {
+        font-size: 21px;
+    }
+}

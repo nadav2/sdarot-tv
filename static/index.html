@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Downlod from Sdarot.tv</title>
+    <script src="./index.js" defer></script>
+    <link rel="stylesheet" href="./index.css">
+    <link rel="stylesheet" href="./autocomplete.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="info">
+        <h1>Download episodes from Sdarot.tv</h1>
+        <p>
+            This is a simple tool that allows you to download any episodes from Sdarot.tv
+            without needing to make a "donation" to sdarot.tv.
+            <br/>
+            Just enter your account cradentials and the episode you want to download and you're good to go.
+            <br/><br/>
+            This tool is not affiliated with sdarot.tv in any way shape or form.
+        </p>
+    </div>
+
+    <form class="modal" id="login-form">
+        <span class="model-title">Account Cradentials:</span>
+
+        <div class="model-inputs-container">
+            <div>
+                <span>Username:</span>
+                <input name="username" required type="text" placeholder="Enter your username">
+            </div>
+            <div>
+                <span>Password:</span>
+                <input name="password" required type="password" placeholder="Enter your password">
+            </div>
+        </div>
+
+        <button type="submit" class="model-btn" id="login-btn">Login to sdaort.tv</button>
+    </form>
+
+
+    <form class="modal" id="download-form">
+        <span class="model-title">Download video:</span>
+
+        <div class="model-inputs-container">
+            <div>
+                <span>Series:</span>
+                <div class="autocomplete">
+                    <input name="series-name" required type="text" placeholder="Enter series name" autocomplete="off">
+                </div>
+            </div>
+
+            <div>
+                <span>Season:</span>
+                <input name="season" required type="number" placeholder="Enter season number">
+            </div>
+
+            <div>
+                <span>Episode:</span>
+                <input name="episode" required type="number" placeholder="Enter episode number">
+            </div>
+
+            <div>
+                <span>Quality:</span>
+                <select required name="quality" id="quality">
+                    <option value="1080">1080</option>
+                    <option value="720">720</option>
+                    <option value="480">480</option>
+                    <option value="360">360</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <span id="loading-text"></span>
+            <div class="spinner">
+                <span id="spinner-text"></span>
+                <div class="overlay"></div>
+            </div>
+        </div>
+
+        <button type="submit" class="model-btn" id="download-btn">Download</button>
+
+        <div id="error"></div>
+    </form>
+
+</div>
+
+</body>
+</html>

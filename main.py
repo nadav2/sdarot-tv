@@ -5,6 +5,8 @@ import requests
 from dataclasses import dataclass
 from loguru import logger
 
+HOST = "https://sdarot.buzz"
+
 
 def count_doown(seconds: int):
     for i in reversed(range(seconds)):
@@ -47,20 +49,21 @@ class SearchSeriesResult:
 
 
 class SdarotTV:
-    def __init__(self, user: User = None, host: str = "https://sdarot.tv", cookie: str = None):
+    def __init__(self, user: User = None, host: str = HOST, cookie: str = None):
         self.host = host
         if cookie:
-            logger.info("\rUsing provided cookie to skip login")
+            logger.info(f"\rUsing provided cookie: '{cookie}' to skip login")
             self.cookie = cookie
             return
 
-        indexRes = self.request("/")
-        self.cookie = indexRes.headers.get("set-cookie")
+        index_res = self.request("/")
+        self.cookie = index_res.headers.get("set-cookie")
 
         if user is not None:
             self.login(user)
         else:
-            logger.warning("\rNo user was provided. as for 12/04/2023 sdarot.tv requires login to download videos. We will try to download the videos anyway but it might fail.")
+            logger.warning(
+                "\rNo user was provided. as for 12/04/2023 sdarot.tv requires login to download videos. We will try to download the videos anyway but it might fail.")
 
     def login(self, user: User):
         res = self.request("/login", {
@@ -92,35 +95,38 @@ class SdarotTV:
         )
         return response
 
-    def searchSeries(self, name: str) -> str | None:
+    def search_series(self, name: str) -> list[SearchSeriesResult]:
         response = self.request(f"/ajax/index?search={name}")
+        if not response.text:
+            raise Exception("Failed to search series")
         res = [SearchSeriesResult(**r) for r in response.json()]
-        logger.info(f"\rFound {len(res)} series matching {name} - {[r.name for r in res]}")
-        if len(res) > 0:
-            return res[0].id
-        return None
+        return res
 
-    def downloadVideoById(self, seriesId: str, season: int, episode: int, file_name: str = None):
+    def download_video_by_id(self, series_id: str, season: int, episode: int, file_name: str,
+                             interactive: bool = False):
         def get_token():
-            tokenRes = self.request("/ajax/watch", {
-                "body": f"preWatch=true&SID={seriesId}&season={season}&ep={episode}",
+            token_res = self.request("/ajax/watch", {
+                "body": f"preWatch=true&SID={series_id}&season={season}&ep={episode}",
                 "method": "POST"
             })
-            return tokenRes.text
+            return token_res.text
 
         def get_video_res():
-            finalRes = self.request("/ajax/watch", {
-                "body": f"watch=true&token={token}&serie={seriesId}&season={season}&episode={episode}&type=episode",
+            final_res = self.request("/ajax/watch", {
+                "body": f"watch=true&token={token}&serie={series_id}&season={season}&episode={episode}&type=episode",
                 "method": "POST"
             })
 
-            return VideoRes(**finalRes.json())
+            return VideoRes(**final_res.json())
 
         token = get_token()
         res = get_video_res()
 
         if re.fullmatch(r"עליך להמתין \d+ שניות", res.error):
-            count_doown(30)
+            if interactive:
+                count_doown(30)
+            else:
+                time.sleep(30)
             res = get_video_res()
 
         if res.error:
@@ -143,23 +149,23 @@ class SdarotTV:
                     f.write(chunk)
                     bytes_so_far += len(chunk)
                     progress = round(bytes_so_far / total_size * 100, 2)
-                    print(f"\rDownloaded {bytes_so_far} / {total_size} bytes ({progress}%)", end="")
-                print()
+                    if interactive:
+                        print(f"\rDownloaded {bytes_so_far} / {total_size} bytes ({progress}%)", end="")
+                if interactive:
+                    print()
                 logger.success(f"\rDownloaded {video_path}")
 
-    def downloadVideo(self, name: str, season: int, episode: int, file_name: str = None):
-        seriesId = self.searchSeries(name)
-        if seriesId:
-            self.downloadVideoById(seriesId, season, episode, file_name)
+        return video_path
+
+    def download_video(self, name: str, season: int, episode: int, file_name: str, interactive: bool = False):
+        if matched_series := self.search_series(name):
+            series_id = matched_series[0].id
+            return self.download_video_by_id(series_id, season, episode, file_name, interactive)
         else:
             raise Exception("Series not found")
 
 
-def main():
-    user = User("YOUR_USERNAME", "YOUR_PASSWORD")  # credintials for sdarot.tv
-    sdarot = SdarotTV(user=user, host="https://sdarot.buzz")
-    sdarot.downloadVideo("the simpsons", 1, 1, "simpsons_1.mp4")
-
-
 if __name__ == '__main__':
-    main()
+    my_user = User("YOUR_USERNAME", "YOUR_PASSWORD")  # credintials for sdarot.tv
+    sdarot = SdarotTV(user=my_user)
+    sdarot.download_video("the simpsons", 1, 1, "simpsons_1.mp4", interactive=True)
