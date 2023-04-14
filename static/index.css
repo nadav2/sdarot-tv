@@ -165,4 +165,8 @@ button:disabled {
     h1 {
         font-size: 21px;
     }
+
+    .modal:last-of-type {
+        margin-top: -24px;
+    }
 }
