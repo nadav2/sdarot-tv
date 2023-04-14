@@ -15,10 +15,14 @@ const sleep = (mill) => new Promise((resolve) => setTimeout(resolve, mill));
 
 async function startSpinnerCounter() {
     const spinner = document.getElementById("spinner-text");
+    const loadingContainer = document.getElementById("loading");
     const counter = 30.0;
     const tic = Date.now();
 
     while (true) {
+        if (loadingContainer.style.display === "none") {
+            break;
+        }
         const step = counter - (Date.now() - tic) / 1000;
         if (step <= 0) {
             spinner.innerText = "0";
@@ -30,15 +34,17 @@ async function startSpinnerCounter() {
 }
 
 let chosenSeriesId = null;
+let updateCookieRef = null;
 
 async function downloadVideo() {
-    const cookie = localStorage.getItem("sdarotTVCookie");
-    if (!cookie) {
-        alert("Please login first to sdaort.tv");
+   if (!chosenSeriesId) {
+        alert("Please choose a series from the list");
         return;
     }
-    if (!chosenSeriesId) {
-        alert("Please choose a series from the list");
+
+    const cookie = await updateCookieRef;
+    if (!cookie) {
+        alert("Please login first to sdaort.tv");
         return;
     }
 
@@ -79,7 +85,7 @@ async function downloadVideo() {
             downloadFromBlob(blob, `${name} - S${season}E${episode}.mp4`);
         } else {
             const data = await res.json();
-            const error = data.error || "Unknown error";
+            const error = data.error || "Unknown error accured while trying to download the episode";
             errorContainer.innerHTML = error;
             errorContainer.classList.add("error");
         }
@@ -94,6 +100,18 @@ async function downloadVideo() {
 
 const getLoginBtn = () => document.getElementById("login-btn");
 
+function fillInputs() {
+    const username = localStorage.getItem("username");
+    const password = localStorage.getItem("password");
+    const userInput = document.querySelector("[name=username]");
+    const passwordInput = document.querySelector("[name=password]");
+
+    userInput.value = username;
+    passwordInput.value = password;
+
+    return [userInput, passwordInput];
+}
+
 function changeLoginModalMode(mode) {
     if (mode === "edit") {
         const userInput = document.querySelector("[name=username]");
@@ -106,14 +124,9 @@ function changeLoginModalMode(mode) {
 
         getLoginBtn().innerText = "Login to sdaort.tv";
     } else if (mode === "saved") {
-        const username = localStorage.getItem("username");
-        const password = localStorage.getItem("password");
-        const userInput = document.querySelector("[name=username]");
-        const passwordInput = document.querySelector("[name=password]");
+        const [userInput, passwordInput] = fillInputs();
 
-        userInput.value = username;
         userInput.disabled = true;
-        passwordInput.value = password;
         passwordInput.disabled = true;
 
         getLoginBtn().innerText = "Logout";
@@ -142,7 +155,7 @@ async function login() {
     });
     const data = await res.json();
     if (!data.sdarotTVCookie) {
-        alert(data.error || "Unknown error");
+        alert(data.error || "Unknown error accured while trying to login to sdarot.tv");
         return;
     }
 
@@ -152,6 +165,32 @@ async function login() {
 
     changeLoginModalMode("saved");
     alert("Logged in successfully");
+}
+
+async function updateCookie() {
+    const username = localStorage.getItem("username");
+    const password = localStorage.getItem("password");
+
+    const res = await fetch("/login", {
+        method: "POST", headers: {
+            "Content-Type": "application/json"
+        }, body: JSON.stringify({
+            username,
+            password
+        })
+    });
+
+    const data = await res.json();
+    if (!data.sdarotTVCookie) {
+        changeLoginModalMode("edit");
+        fillInputs();
+        localStorage.setItem("sdarotTVCookie", "");
+        alert(data.error || "Unknown error accured while trying to login to sdarot.tv");
+        return;
+    }
+
+    localStorage.setItem("sdarotTVCookie", data.sdarotTVCookie);
+    return data.sdarotTVCookie;
 }
 
 async function search(seriesName) {
@@ -170,6 +209,7 @@ function onStart() {
     const sdarotTVCookie = localStorage.getItem("sdarotTVCookie");
     if (sdarotTVCookie) {
         changeLoginModalMode("saved");
+        updateCookieRef = updateCookie();
     } else {
         changeLoginModalMode("edit");
     }

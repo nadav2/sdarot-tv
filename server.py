@@ -40,7 +40,7 @@ def login(data: LoginData, response: Response):
     except Exception as e:
         logger.error(e)
         response.status_code = 500
-        return {"error": "Failed to login"}
+        return {"error": str(e) or "Failed to login to sdarot.tv"}
 
 
 @app.post("/search")
