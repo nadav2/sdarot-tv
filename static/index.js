@@ -42,7 +42,8 @@ async function downloadVideo() {
         return;
     }
 
-    const cookie = await updateCookieRef;
+    await updateCookieRef;
+    const cookie = localStorage.getItem("sdarotTVCookie");
     if (!cookie) {
         alert("Please login first to sdaort.tv");
         return;
