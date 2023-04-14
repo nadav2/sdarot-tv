@@ -48,7 +48,7 @@ def search(data: SearchData):
     try:
         sdarot = SdarotTV(cookie=data.cookie)
         matched_sires = sdarot.search_series(data.name)
-        return [x.__dict__ for x in matched_sires]
+        return matched_sires
     except Exception as e:
         logger.error(e)
         return []
