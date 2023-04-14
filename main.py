@@ -51,7 +51,7 @@ class SearchSeriesResult:
 class SdarotTV:
     def __init__(self, user: User = None, host: str = HOST, cookie: str = None):
         self.host = host
-        if cookie:
+        if cookie is not None:
             logger.info(f"\rUsing provided cookie: '{cookie}' to skip login")
             self.cookie = cookie
             return

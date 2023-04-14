@@ -32,6 +32,11 @@ async function startSpinnerCounter() {
 let chosenSeriesId = null;
 
 async function downloadVideo() {
+    const cookie = localStorage.getItem("sdarotTVCookie");
+    if (!cookie) {
+        alert("Please login first to sdaort.tv");
+        return;
+    }
     if (!chosenSeriesId) {
         alert("Please choose a series from the list");
         return;
@@ -62,7 +67,7 @@ async function downloadVideo() {
             method: "POST", headers: {
                 "Content-Type": "application/json"
             }, body: JSON.stringify({
-                cookie: localStorage.getItem("sdarotTVCookie"),
+                cookie,
                 name,
                 seriesId: chosenSeriesId,
                 season,
@@ -154,8 +159,8 @@ async function search(seriesName) {
         method: "POST", headers: {
             "Content-Type": "application/json"
         }, body: JSON.stringify({
-            cookie: localStorage.getItem("sdarotTVCookie"),
-            name: seriesName
+            name: seriesName,
+            cookie: ""
         })
     });
     return await res.json();
