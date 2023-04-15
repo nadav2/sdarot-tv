@@ -1,13 +1,16 @@
-import uvicorn
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, Response, RedirectResponse
-from fastapi import FastAPI
-from pydantic import BaseModel
+import asyncio
+import logging
 import os
-from loguru import logger
-from main import SdarotTV, User, HOST
 import re
-from fastapi import BackgroundTasks
+import click
+import uvicorn
+from fastapi import BackgroundTasks, FastAPI
+from fastapi.responses import FileResponse, RedirectResponse, Response
+from fastapi.staticfiles import StaticFiles
+from loguru import logger
+from pydantic import BaseModel
+from uvicorn import Config
+from main import HOST, SdarotTV, User
 
 
 class DownloadData(BaseModel):
@@ -54,10 +57,11 @@ def search(data: SearchData):
         return []
 
 
-@app.post("/download", status_code=200)
+@app.post("/download")
 def download(data: DownloadData, response: Response, background_tasks: BackgroundTasks):
     def escape_file_name(name: str):
         return re.sub(r'[\\/*?:"<>|]', '|', name)
+
     try:
         sdarot = SdarotTV(cookie=data.cookie)
         file_name = f"./videos/{escape_file_name(f'{data.name}-{data.season}-{data.episode}')}.mp4"
@@ -76,7 +80,44 @@ def status():
     return RedirectResponse(f"{HOST}/status")
 
 
-app.mount("/", StaticFiles(directory="./static", html=True), name="static")
+async def serve(self, sockets=None, shared_value=None):
+    uvicorn_logger = logging.getLogger("uvicorn.error")
+    process_id = os.getpid()
+
+    config = self.config
+    if not config.loaded:
+        config.load()
+
+    self.lifespan = config.lifespan_class(config)
+
+    self.install_signal_handlers()
+
+    message = "Started server process [%d]"
+    color_message = "Started server process [" + click.style("%d", fg="cyan") + "]"
+    uvicorn_logger.info(message, process_id, extra={"color_message": color_message})
+
+    await self.startup(sockets=sockets)
+    if shared_value:
+        shared_value.value = True
+
+    if self.should_exit:
+        return
+    await self.main_loop()
+    await self.shutdown(sockets=sockets)
+
+    message = "Finished server process [%d]"
+    color_message = "Finished server process [" + click.style("%d", fg="cyan") + "]"
+    uvicorn_logger.info(message, process_id, extra={"color_message": color_message})
+
+
+def main(port=8000, shared_value=None):
+    async def start_server():
+        app.mount("/", StaticFiles(directory="./static", html=True), name="static")
+        server = uvicorn.Server(config=Config(app, host="0.0.0.0", port=port))
+        await serve(server, shared_value=shared_value)
+
+    asyncio.run(start_server())
+
 
 if __name__ == '__main__':
-    uvicorn.run("server:app", host="0.0.0.0", port=8000)
+    main()

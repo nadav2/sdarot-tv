@@ -3,3 +3,5 @@ loguru~=0.7.0
 fastapi~=0.95.1
 uvicorn~=0.21.1
 pydantic~=1.10.7
+pywebview~=4.0.2
+click==8.1.3

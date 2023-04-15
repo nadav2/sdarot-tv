@@ -35,6 +35,7 @@ async function startSpinnerCounter() {
 
 let chosenSeriesId = null;
 let updateCookieRef = null;
+const GENRIC_LOGIN_ERROR = "Unknown error accured while trying to login to sdarot.tv";
 
 async function downloadVideo() {
    if (!chosenSeriesId) {
@@ -85,7 +86,7 @@ async function downloadVideo() {
             const blob = await res.blob();
             downloadFromBlob(blob, `${name} - S${season}E${episode}.mp4`);
         } else {
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             const error = data.error || "Unknown error accured while trying to download the episode";
             errorContainer.innerHTML = error;
             errorContainer.classList.add("error");
@@ -135,7 +136,8 @@ function changeLoginModalMode(mode) {
 }
 
 async function login() {
-    if (getLoginBtn().innerText === "Logout") {
+    const loginBtn = getLoginBtn();
+    if (loginBtn.innerText === "Logout") {
         localStorage.removeItem("username");
         localStorage.removeItem("password");
         localStorage.removeItem("sdarotTVCookie");
@@ -143,55 +145,82 @@ async function login() {
         return;
     }
 
+    loginBtn.disabled = true;
+    loginBtn.innerText = "Logging in...";
     const username = document.querySelector("[name=username]").value;
     const password = document.querySelector("[name=password]").value;
 
-    const res = await fetch("/login", {
-        method: "POST", headers: {
-            "Content-Type": "application/json"
-        }, body: JSON.stringify({
-            username,
-            password
-        })
-    });
-    const data = await res.json();
-    if (!data.sdarotTVCookie) {
-        alert(data.error || "Unknown error accured while trying to login to sdarot.tv");
-        return;
+    const revertLoginBtn = () => {
+        loginBtn.disabled = false;
+        loginBtn.innerText = "Login to sdaort.tv";
     }
 
-    localStorage.setItem("username", username);
-    localStorage.setItem("password", password);
-    localStorage.setItem("sdarotTVCookie", data.sdarotTVCookie);
+    try {
+        const res = await fetch("/login", {
+            method: "POST", headers: {
+                "Content-Type": "application/json"
+            }, body: JSON.stringify({
+                username,
+                password
+            })
+        });
 
-    changeLoginModalMode("saved");
-    alert("Logged in successfully");
+        const data = await res.json();
+        if (!data.sdarotTVCookie) {
+            revertLoginBtn();
+            alert(data.error || GENRIC_LOGIN_ERROR);
+            return;
+        }
+
+        localStorage.setItem("username", username);
+        localStorage.setItem("password", password);
+        localStorage.setItem("sdarotTVCookie", data.sdarotTVCookie);
+
+        changeLoginModalMode("saved");
+        alert("Logged in successfully");
+
+        loginBtn.disabled = false;
+    } catch (e) {
+        revertLoginBtn();
+        alert(GENRIC_LOGIN_ERROR);
+    }
 }
 
 async function updateCookie() {
     const username = localStorage.getItem("username");
     const password = localStorage.getItem("password");
-
-    const res = await fetch("/login", {
-        method: "POST", headers: {
-            "Content-Type": "application/json"
-        }, body: JSON.stringify({
-            username,
-            password
-        })
-    });
-
-    const data = await res.json();
-    if (!data.sdarotTVCookie) {
-        changeLoginModalMode("edit");
-        fillInputs();
-        localStorage.setItem("sdarotTVCookie", "");
-        alert(data.error || "Unknown error accured while trying to login to sdarot.tv");
+    if (!username || !password) {
+        alert("Tried to update cookie but no username or password was found")
         return;
     }
 
-    localStorage.setItem("sdarotTVCookie", data.sdarotTVCookie);
-    return data.sdarotTVCookie;
+    try {
+        const res = await fetch("/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                username,
+                password
+            })
+        });
+
+        const data = await res.json();
+        if (!data.sdarotTVCookie) {
+            changeLoginModalMode("edit");
+            fillInputs();
+            localStorage.setItem("sdarotTVCookie", "");
+            alert(data.error || GENRIC_LOGIN_ERROR);
+            return;
+        }
+
+        localStorage.setItem("sdarotTVCookie", data.sdarotTVCookie);
+        return data.sdarotTVCookie;
+    } catch (e) {
+        localStorage.setItem("sdarotTVCookie", "");
+        alert(GENRIC_LOGIN_ERROR);
+    }
 }
 
 async function search(seriesName) {

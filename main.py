@@ -1,8 +1,8 @@
 import re
 import time
+from dataclasses import dataclass
 from typing import Any
 import requests
-from dataclasses import dataclass
 from loguru import logger
 
 HOST = "https://sdarot.buzz"
