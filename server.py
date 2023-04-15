@@ -2,14 +2,18 @@ import asyncio
 import logging
 import os
 import re
+
 import click
+import requests
 import uvicorn
+from bs4 import BeautifulSoup
 from fastapi import BackgroundTasks, FastAPI
 from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from pydantic import BaseModel
 from uvicorn import Config
+
 from main import HOST, SdarotTV, User
 
 
@@ -17,7 +21,7 @@ class DownloadData(BaseModel):
     cookie: str
     name: str
     season: int
-    episode: int
+    episode: str
     seriesId: str
 
 
@@ -29,6 +33,11 @@ class LoginData(BaseModel):
 class SearchData(BaseModel):
     cookie: str
     name: str
+
+
+class SeriesData(BaseModel):
+    seriesId: str
+    season: int
 
 
 app = FastAPI()
@@ -79,6 +88,38 @@ def download(data: DownloadData, response: Response, background_tasks: Backgroun
 def status():
     return RedirectResponse(f"{HOST}/status")
 
+
+@app.post("/series")
+def get_series_data(data: SeriesData, response: Response):
+    try:
+        res = requests.get(f"https://sdarot.buzz/watch/{data.seriesId}").text
+        soup = BeautifulSoup(res, 'html.parser')
+        season_list = soup.find("ul", {"id": "season"})
+        season_list = season_list.find_all("li")
+        season_list = [int(season['data-season']) for season in season_list]
+
+        episode_list = soup.find_all("li", {"data-episode": True})
+        episode_list = [episode['data-episode'] for episode in episode_list]
+        return {"seasons": season_list, "episodes": episode_list}
+    except Exception as e:
+        logger.error(e)
+        response.status_code = 500
+        return {"error": "Failed to get series info from sdaort.tv"}
+
+@app.post("/episodes")
+def get_episodes(data: SeriesData, response: Response):
+    try:
+        res = requests.get(f"https://sdarot.buzz/ajax/watch?episodeList={data.seriesId}&season={data.season}").text
+        soup = BeautifulSoup(res, 'html.parser')
+        episode_list = soup.find_all("li")
+        episode_list = [episode['data-episode'] for episode in episode_list]
+        if not episode_list:
+            raise Exception
+        return {"episodes": episode_list}
+    except Exception as e:
+        logger.error(e)
+        response.status_code = 500
+        return {"error": "Failed to get series info from sdaort.tv"}
 
 async def serve(self, sockets=None, shared_value=None):
     uvicorn_logger = logging.getLogger("uvicorn.error")

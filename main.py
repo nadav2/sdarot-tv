@@ -102,7 +102,7 @@ class SdarotTV:
         res = [SearchSeriesResult(**r) for r in response.json()]
         return res
 
-    def download_video_by_id(self, series_id: str, season: int, episode: int, file_name: str,
+    def download_video_by_id(self, series_id: str, season: int, episode: int | str, file_name: str,
                              interactive: bool = False):
         def get_token():
             token_res = self.request("/ajax/watch", {
@@ -157,7 +157,7 @@ class SdarotTV:
 
         return video_path
 
-    def download_video(self, name: str, season: int, episode: int, file_name: str, interactive: bool = False):
+    def download_video(self, name: str, season: int, episode: int | str, file_name: str, interactive: bool = False):
         if matched_series := self.search_series(name):
             series_id = matched_series[0].id
             return self.download_video_by_id(series_id, season, episode, file_name, interactive)

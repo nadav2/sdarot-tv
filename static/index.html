@@ -58,12 +58,16 @@
 
             <div>
                 <span>Season:</span>
-                <input name="season" required type="number" min="1" placeholder="Enter season number">
+                <select name="season" required disabled onchange="onSeasonChosen()">
+                    <option value="">Select season (Choose a series first)</option>
+                </select>
             </div>
 
             <div>
                 <span>Episode:</span>
-                <input name="episode" required type="number" min="1" placeholder="Enter episode number">
+                <select name="episode" required disabled>
+                    <option value="">Select episode (Choose a season first)</option>
+                </select>
             </div>
 
             <div>
@@ -85,7 +89,7 @@
             </div>
         </div>
 
-        <button type="submit" class="model-btn" id="download-btn">Download</button>
+        <button type="submit" class="model-btn" id="download-btn">Next</button>
 
         <div id="error"></div>
     </form>

@@ -55,7 +55,8 @@ body {
 }
 
 .model-inputs-container :is(input[type="text"], input[type="password"], input[type="number"], select) {
-    padding: 8px;
+    height: 35px;
+    padding-inline: 8px;
     border-radius: 8px;
     border: 1px solid lightgray;
     font-size: 14px;

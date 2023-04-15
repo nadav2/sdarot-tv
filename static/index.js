@@ -119,9 +119,7 @@ function changeLoginModalMode(mode) {
         const userInput = document.querySelector("[name=username]");
         const passwordInput = document.querySelector("[name=password]");
 
-        userInput.value = "";
         userInput.disabled = false;
-        passwordInput.value = "";
         passwordInput.disabled = false;
 
         getLoginBtn().innerText = "Login to sdaort.tv";
@@ -190,6 +188,7 @@ async function updateCookie() {
     const username = localStorage.getItem("username");
     const password = localStorage.getItem("password");
     if (!username || !password) {
+        localStorage.setItem("sdarotTVCookie", "");
         alert("Tried to update cookie but no username or password was found")
         return;
     }
@@ -209,7 +208,6 @@ async function updateCookie() {
         const data = await res.json();
         if (!data.sdarotTVCookie) {
             changeLoginModalMode("edit");
-            fillInputs();
             localStorage.setItem("sdarotTVCookie", "");
             alert(data.error || GENRIC_LOGIN_ERROR);
             return;
@@ -255,6 +253,71 @@ function onStart() {
         e.preventDefault();
         downloadVideo();
     });
+}
+
+async function onSeriesChosen(seriesId) {
+     const response = await fetch("/series", {
+        method: "POST", headers: {
+            "Content-Type": "application/json"
+        }, body: JSON.stringify({
+            seriesId: seriesId,
+            season: 1,
+        })
+    });
+    const res = await response.json();
+    if (response.status !== 200) {
+        alert(res.error || "Failed to get series info from sdaort.tv");
+        return;
+    }
+
+    const selectSeason = document.querySelector("[name=season]");
+    const selectEpisode = document.querySelector("[name=episode]");
+
+    selectSeason.innerHTML = "";
+    for (let season of res.seasons) {
+        const option = document.createElement("option");
+        option.value = season;
+        option.innerText = season;
+        selectSeason.appendChild(option);
+    }
+
+    selectEpisode.innerHTML = "";
+    for (let episode of res.episodes) {
+        const option = document.createElement("option");
+        option.value = episode;
+        option.innerText = episode;
+        document.querySelector("[name=episode]").appendChild(option);
+        selectEpisode.appendChild(option);
+    }
+
+    selectSeason.disabled = false;
+    selectEpisode.disabled = false;
+}
+
+async function onSeasonChosen() {
+    const season = document.querySelector("[name=season]").value;
+    const response = await fetch("/episodes", {
+        method: "POST", headers: {
+            "Content-Type": "application/json"
+        }, body: JSON.stringify({
+            seriesId: chosenSeriesId,
+            season: season,
+        })
+    });
+    const res = await response.json();
+    if (response.status !== 200) {
+        alert(res.error || "Failed to get series info from sdaort.tv");
+        return;
+    }
+
+    const selectEpisode = document.querySelector("[name=episode]");
+    selectEpisode.innerHTML = "";
+    for (let episode of res.episodes) {
+        const option = document.createElement("option");
+        option.value = episode;
+        option.innerText = episode;
+        selectEpisode.appendChild(option);
+    }
 }
 
 function autocomplete(inp) {
@@ -305,6 +368,7 @@ function autocomplete(inp) {
                 inp.value = chosenInp.value;
                 chosenSeriesId = chosenInp.getAttribute("seris-id");
                 closeAllLists();
+                onSeriesChosen(chosenSeriesId);
             });
             a.appendChild(b);
         }
