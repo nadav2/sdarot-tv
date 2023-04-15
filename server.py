@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 import re
-
 import click
 import requests
 import uvicorn
@@ -13,7 +12,6 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from pydantic import BaseModel
 from uvicorn import Config
-
 from main import HOST, SdarotTV, User
 
 
@@ -106,6 +104,7 @@ def get_series_data(data: SeriesData, response: Response):
         response.status_code = 500
         return {"error": "Failed to get series info from sdaort.tv"}
 
+
 @app.post("/episodes")
 def get_episodes(data: SeriesData, response: Response):
     try:
@@ -120,6 +119,7 @@ def get_episodes(data: SeriesData, response: Response):
         logger.error(e)
         response.status_code = 500
         return {"error": "Failed to get series info from sdaort.tv"}
+
 
 async def serve(self, sockets=None, shared_value=None):
     uvicorn_logger = logging.getLogger("uvicorn.error")
