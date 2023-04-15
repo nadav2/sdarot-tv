@@ -38,7 +38,7 @@ let updateCookieRef = null;
 const GENRIC_LOGIN_ERROR = "Unknown error accured while trying to login to sdarot.tv";
 
 async function downloadVideo() {
-   if (!chosenSeriesId) {
+    if (!chosenSeriesId) {
         alert("Please choose a series from the list");
         return;
     }
@@ -151,7 +151,7 @@ async function login() {
     const revertLoginBtn = () => {
         loginBtn.disabled = false;
         loginBtn.innerText = "Login to sdaort.tv";
-    }
+    };
 
     try {
         const res = await fetch("/login", {
@@ -189,7 +189,7 @@ async function updateCookie() {
     const password = localStorage.getItem("password");
     if (!username || !password) {
         localStorage.setItem("sdarotTVCookie", "");
-        alert("Tried to update cookie but no username or password was found")
+        alert("Tried to update cookie but no username or password was found");
         return;
     }
 
@@ -256,68 +256,107 @@ function onStart() {
 }
 
 async function onSeriesChosen(seriesId) {
-     const response = await fetch("/series", {
-        method: "POST", headers: {
-            "Content-Type": "application/json"
-        }, body: JSON.stringify({
-            seriesId: seriesId,
-            season: 1,
-        })
-    });
-    const res = await response.json();
-    if (response.status !== 200) {
-        alert(res.error || "Failed to get series info from sdaort.tv");
-        return;
-    }
-
     const selectSeason = document.querySelector("[name=season]");
     const selectEpisode = document.querySelector("[name=episode]");
 
     selectSeason.innerHTML = "";
-    for (let season of res.seasons) {
-        const option = document.createElement("option");
-        option.value = season;
-        option.innerText = season;
-        selectSeason.appendChild(option);
-    }
+    selectSeason.disabled = true;
+    const option = document.createElement("option");
+    option.innerText = "Loading...";
+    selectSeason.appendChild(option);
 
     selectEpisode.innerHTML = "";
-    for (let episode of res.episodes) {
-        const option = document.createElement("option");
-        option.value = episode;
-        option.innerText = episode;
-        document.querySelector("[name=episode]").appendChild(option);
-        selectEpisode.appendChild(option);
-    }
+    selectEpisode.disabled = true;
+    const option2 = document.createElement("option");
+    option2.innerText = "Select episode (Choose a season first)";
+    selectEpisode.appendChild(option2);
 
-    selectSeason.disabled = false;
-    selectEpisode.disabled = false;
+    try {
+        const response = await fetch("/series", {
+            method: "POST", headers: {
+                "Content-Type": "application/json"
+            }, body: JSON.stringify({
+                seriesId: seriesId,
+                season: 1
+            })
+        });
+        const res = await response.json();
+        if (response.status !== 200) {
+            throw {error: res.error || "Failed to get series info from sdaort.tv"};
+        }
+
+        selectSeason.innerHTML = "";
+        for (let season of res.seasons) {
+            const option = document.createElement("option");
+            option.value = season;
+            option.innerText = season;
+            selectSeason.appendChild(option);
+        }
+
+        selectEpisode.innerHTML = "";
+        for (let episode of res.episodes) {
+            const option = document.createElement("option");
+            option.value = episode;
+            option.innerText = episode;
+            document.querySelector("[name=episode]").appendChild(option);
+            selectEpisode.appendChild(option);
+        }
+
+        selectSeason.disabled = false;
+        selectEpisode.disabled = false;
+    } catch (e) {
+        if (e.error) alert(e.error);
+
+        selectSeason.innerHTML = "";
+        selectSeason.disabled = true;
+        const option = document.createElement("option");
+        option.innerText = "No seasons found";
+        selectSeason.appendChild(option);
+    }
 }
 
 async function onSeasonChosen() {
     const season = document.querySelector("[name=season]").value;
-    const response = await fetch("/episodes", {
-        method: "POST", headers: {
-            "Content-Type": "application/json"
-        }, body: JSON.stringify({
-            seriesId: chosenSeriesId,
-            season: season,
-        })
-    });
-    const res = await response.json();
-    if (response.status !== 200) {
-        alert(res.error || "Failed to get series info from sdaort.tv");
-        return;
-    }
-
     const selectEpisode = document.querySelector("[name=episode]");
+
     selectEpisode.innerHTML = "";
-    for (let episode of res.episodes) {
+    selectEpisode.disabled = true;
+    const option = document.createElement("option");
+    option.innerText = "Loading...";
+    selectEpisode.appendChild(option);
+
+    try {
+        const response = await fetch("/episodes", {
+            method: "POST", headers: {
+                "Content-Type": "application/json"
+            }, body: JSON.stringify({
+                seriesId: chosenSeriesId,
+                season: season
+            })
+        });
+        const res = await response.json();
+        if (response.status !== 200) {
+            throw {error: res.error || "Failed to get series info from sdaort.tv"};
+        }
+
+        selectEpisode.innerHTML = "";
+        for (let episode of res.episodes) {
+            const option = document.createElement("option");
+            option.value = episode;
+            option.innerText = episode;
+            selectEpisode.appendChild(option);
+        }
+        selectEpisode.disabled = false;
+    } catch (e) {
+        if (e.error) alert(e.error);
+
+        selectEpisode.innerHTML = "";
+        selectEpisode.disabled = true;
         const option = document.createElement("option");
-        option.value = episode;
-        option.innerText = episode;
+        option.innerText = "No episodes found";
         selectEpisode.appendChild(option);
     }
+
 }
 
 function autocomplete(inp) {

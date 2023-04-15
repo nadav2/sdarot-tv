@@ -16,7 +16,7 @@ def main():
         time.sleep(0.1)
 
     webview.create_window('Sdarot.TV Downloader', f"http://localhost:{port}")
-    webview.start(debug=True)
+    webview.start()
 
 
 if __name__ == '__main__':
