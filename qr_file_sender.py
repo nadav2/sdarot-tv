@@ -1,6 +1,6 @@
 import base64
 import os.path
-from typing import List
+from typing import Iterable, List
 
 import matplotlib.pyplot as plt
 import qrcode
@@ -8,10 +8,9 @@ from matplotlib.animation import FuncAnimation
 from qrcode.image.pil import PilImage
 
 
-def show_qrs(images: List[PilImage], frames: List[int] = None):
+def show_qrs(images: List[PilImage], frames: bool = False):
     interval = 100
-    if frames is not None:
-        images = [images[i] for i in frames]
+    if frames:
         for image in images:
             plt.imshow(image, cmap="gray")
             plt.show()
@@ -21,8 +20,7 @@ def show_qrs(images: List[PilImage], frames: List[int] = None):
     fig, ax = plt.subplots()
     im = ax.imshow(images[0], animated=True, cmap="gray")
 
-    def update(frame):
-        print(frame)
+    def update(frame: int):
         # Update the image with the next image in the list
         im.set_array(images[frame])
         return (im,)
@@ -40,7 +38,10 @@ def create_qr(data: str) -> PilImage:
     return qr.make_image()
 
 
-def send_file(path: str):
+def send_file(path: str, frames: Iterable[int] = None):
+    has_frames = frames is not None
+    frames = set(frames) if has_frames else None
+
     with open(path, "rb") as f:
         data = f.read()
         encoded = base64.b64encode(data).decode("utf-8")
@@ -51,14 +52,17 @@ def send_file(path: str):
     for i in range(0, len(encoded), qr_size):
         end = i + qr_size >= len(encoded)
         step = i // qr_size + 1
+        if has_frames and step not in frames:
+            continue
+
         img = create_qr(f"{f'#{step}' if end else step}@@{encoded[i:i + qr_size]}")
         images.append(img)
         if end:
             for _ in range(5):
                 images.append(img)
 
-    show_qrs(images)
+    show_qrs(images, has_frames)
 
 
 if __name__ == '__main__':
-    send_file("server.py")
+    send_file("gpx/trips.zip", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20])
