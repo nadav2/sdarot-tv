@@ -46,7 +46,9 @@ def send_file(path: str, frames: Iterable[int] = None):
         data = f.read()
         encoded = base64.b64encode(data).decode("utf-8")
 
-    images = [create_qr(f"0@@{os.path.basename(path)}")]
+    images = []
+    if not has_frames or 0 in frames:
+        images.append(create_qr(f"0@@{os.path.basename(path)}"))
 
     qr_size = 150
     for i in range(0, len(encoded), qr_size):
@@ -65,4 +67,4 @@ def send_file(path: str, frames: Iterable[int] = None):
 
 
 if __name__ == '__main__':
-    send_file("gpx/trips.zip", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20])
+    send_file("gpx/trips.zip", [0, 1, 2, 3])
