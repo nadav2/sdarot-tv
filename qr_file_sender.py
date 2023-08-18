@@ -1,6 +1,8 @@
 import base64
 import io
 import os.path
+import sys
+
 import cv2
 import lt
 import numpy as np
@@ -19,7 +21,7 @@ def send_file(path: str):
     cv_window_name = "QR File Sender"
     cv2.namedWindow(cv_window_name, cv2.WINDOW_NORMAL)
 
-    block_size = 100
+    block_size = 102
     with open(path, 'rb') as f:
         file_data = f.read()
 
@@ -43,5 +45,14 @@ def send_file(path: str):
             break
 
 
+def cli():
+    args = sys.argv[1:]
+    if len(args) > 0:
+        file_path = args[0]
+    else:
+        file_path = input("Enter file path: ")
+    send_file(file_path)
+
+
 if __name__ == '__main__':
-    send_file("gpx/tupuzina_granot.gpx")
+    cli()
